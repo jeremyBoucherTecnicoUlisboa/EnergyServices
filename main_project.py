@@ -1,4 +1,4 @@
-import dash
+ import dash
 from dash import dcc, html, dash_table
 from dash.dependencies import Input, Output
 import plotly.graph_objs as go
@@ -18,6 +18,7 @@ error_df = error_df(df_FR)
 
 # Initialize the Dash app
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+server=app.server
 
 # App layout
 app.layout = html.Div(children=[
