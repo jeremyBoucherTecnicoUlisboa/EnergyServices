@@ -18,7 +18,6 @@ error_df = error_df(df_FR)
 
 # Initialize the Dash app
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
-server=app.server
 
 # App layout
 app.layout = html.Div(children=[
@@ -55,6 +54,17 @@ app.layout = html.Div(children=[
                 data=error_df.to_dict('records'),  # Convert DataFrame to a list of dictionaries
             )
         ]),
+        dcc.Tab(label='EDA', value='tab-4', children=[
+            html.Div([
+                html.H4('Select a feature:'),
+                dcc.Dropdown(
+                    id='column-dropdown',
+                    options=[{'label': i, 'value': i} for i in df.columns],
+                    value=df.columns[0],  # Default selected value
+                ),
+                html.Div(id='plots-container')
+            ])
+        ]),
     ]),
 ])
 
@@ -64,11 +74,34 @@ app.layout = html.Div(children=[
     Output('yearly-data', 'figure'),
     [Input('variable-selector', 'value')]
 )
+
 def update_graph(selected_variables):
     fig = px.line(df, y=selected_variables)
     return fig
 
+@app.callback(
+    Output('plots-container', 'children'),
+    [Input('column-dropdown', 'value')]
+)
+
+
+def update_plots(selected_column):
+    if selected_column is None:
+        return html.P("Select a column to display plots.")
+
+    # Example plots: Histogram and Box Plot
+    fig1 = px.histogram(df, x=selected_column, title=f'Histogram of {selected_column}')
+    fig2 = px.box(df, y=selected_column, title=f'Box Plot of {selected_column}')
+
+    return [
+        dcc.Graph(figure=fig1),
+        dcc.Graph(figure=fig2)
+    ]
+
+
+
+
 
 # Run the app
 if __name__ == '__main__':
-    app.run_server()
+    app.run_server(debug=True)
