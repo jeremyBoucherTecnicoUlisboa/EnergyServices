@@ -18,6 +18,7 @@ error_df = error_df(df_FR)
 
 # Initialize the Dash app
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+server = app.server
 
 # App layout
 app.layout = html.Div(children=[
@@ -135,4 +136,4 @@ def update_graph_2(selected_variables):
 
 # Run the app
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server()
