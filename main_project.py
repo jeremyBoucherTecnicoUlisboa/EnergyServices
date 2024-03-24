@@ -8,17 +8,16 @@ from util_func import *
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
-
 # Load your CSV data into a DataFrame
 path_file_csv = ''
 df = read_rew_data(path_file_csv)
+df_FS = pd.read_csv('FS.csv', index_col='index')
 df_FR = get_result_forecast(path_file_csv)
-df_FR['prediction_AR'] = autoreg_benchmark(df['Power_kW'],df_FR['test'])
+df_FR['prediction_AR'] = autoreg_benchmark(df['Power_kW'], df_FR['test'])
 error_df = error_df(df_FR)
 
 # Initialize the Dash app
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
-server=app.server
 
 # App layout
 app.layout = html.Div(children=[
@@ -66,6 +65,17 @@ app.layout = html.Div(children=[
                 html.Div(id='plots-container')
             ])
         ]),
+        dcc.Tab(label='Feature selection', value='tab-5', children=[
+            html.Div([
+                html.H4('Select a feature:'),
+                dcc.Dropdown(
+                    id='column-dropdown-2',
+                    options=[{'label': i, 'value': i} for i in ['Correlation'] + df_FS.columns.to_list()],
+                    value='Correlation',  # Default selected value
+                ),
+                html.Div(id='plots-container-2')
+            ])
+        ]),
     ]),
 ])
 
@@ -75,17 +85,15 @@ app.layout = html.Div(children=[
     Output('yearly-data', 'figure'),
     [Input('variable-selector', 'value')]
 )
-
 def update_graph(selected_variables):
     fig = px.line(df, y=selected_variables)
     return fig
+
 
 @app.callback(
     Output('plots-container', 'children'),
     [Input('column-dropdown', 'value')]
 )
-
-
 def update_plots(selected_column):
     if selected_column is None:
         return html.P("Select a column to display plots.")
@@ -100,9 +108,31 @@ def update_plots(selected_column):
     ]
 
 
+@app.callback(
+    Output('plots-container-2', 'children'),
+    [Input('column-dropdown-2', 'value')]
+)
+def update_graph_2(selected_variables):
+    if selected_variables == 'Correlation':
+        corr_matrix = df.corr()
+        fig = ff.create_annotated_heatmap(
+            z=corr_matrix.values,
+            x=list(corr_matrix.columns),
+            y=list(corr_matrix.index),
+            annotation_text=corr_matrix.round(2).values,
+            colorscale='Viridis',
+            showscale=True
+        )
+        return dcc.Graph(figure=fig)
 
+    else:
+        fig = go.Figure(go.Bar(
+            x=df_FS[selected_variables].index,  # Categories (index of the series)
+            y=df_FS[selected_variables].values
+        ))
+        return dcc.Graph(figure=fig)
 
 
 # Run the app
 if __name__ == '__main__':
-    app.run_server()
+    app.run_server(debug=True)

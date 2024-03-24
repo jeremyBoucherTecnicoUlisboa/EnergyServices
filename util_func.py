@@ -2,6 +2,7 @@ import dash
 from dash import dcc, html
 from dash.dependencies import Input, Output
 import plotly.graph_objs as go
+import plotly.figure_factory as ff
 import pandas as pd
 import plotly.express as px
 import numpy as np
